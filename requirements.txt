@@ -1,0 +1,6 @@
+gradio>=5.0
+gspread>=6.0
+google-auth>=2.30
+google-genai>=0.3
+requests>=2.31
+beautifulsoup4>=4.12
