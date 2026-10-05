@@ -63,12 +63,22 @@ def get_drive():
     return _state["drive"]
 
 def gemini_text(prompt):
-    try:
-        return get_gemini().generate_content(prompt).text.strip()
-    except Exception as e:
-        if "429" in str(e) or "quota" in str(e).lower():
-            raise Exception("Aaj ka Gemini free quota khatam ho chuka hai. Kal dobara try karein.")
-        raise
+    import time
+    last = None
+    for attempt in range(4):
+        try:
+            return get_gemini().generate_content(prompt).text.strip()
+        except Exception as e:
+            last = e
+            msg = str(e)
+            if any(k in msg for k in ("503", "UNAVAILABLE", "429", "RESOURCE_EXHAUSTED")):
+                time.sleep(3 * (attempt + 1))
+                continue
+            raise
+    msg = str(last)
+    if "per day" in msg.lower() or "PerDay" in msg:
+        raise Exception("Gemini daily quota khatam: " + msg[:300])
+    raise Exception("Gemini busy/limit (retry ke baad bhi): " + msg[:300])
 
 # ---- history + duplicate check ----
 def get_topic_history(workspace_id=DEFAULT_WORKSPACE_ID):
