@@ -64,21 +64,27 @@ def get_drive():
 
 def gemini_text(prompt):
     import time
-    last = None
-    for attempt in range(4):
-        try:
-            return get_gemini().generate_content(prompt).text.strip()
-        except Exception as e:
-            last = e
-            msg = str(e)
-            if any(k in msg for k in ("503", "UNAVAILABLE", "429", "RESOURCE_EXHAUSTED", "Connection aborted", "RemoteDisconnected")):
-                time.sleep(3 * (attempt + 1))
-                continue
-            raise
-    msg = str(last)
-    if "per day" in msg.lower() or "PerDay" in msg:
-        raise Exception("Gemini daily quota khatam: " + msg[:300])
-    raise Exception("Gemini busy/limit (retry ke baad bhi): " + msg[:300])
+    import google.generativeai as genai
+    genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+    models = []
+    for m in ["gemini-3.1-flash-lite", "gemini-3-flash-preview", os.environ.get("GEMINI_MODEL_NAME")]:
+        if m and m not in models:
+            models.append(m)
+    errors = []
+    for name in models:
+        for attempt in range(3):
+            try:
+                return genai.GenerativeModel(name).generate_content(prompt).text.strip()
+            except Exception as e:
+                msg = str(e)
+                errors.append(name + " -> " + msg[-300:])
+                if "free_tier_requests" in msg or "limit: 0" in msg:
+                    break   # is model ka quota khatam, agla model try karo
+                if any(k in msg for k in ("503", "UNAVAILABLE", "429", "RESOURCE_EXHAUSTED", "Connection aborted", "RemoteDisconnected")):
+                    time.sleep(3 * (attempt + 1))
+                    continue
+                break
+    raise Exception("Gemini fail. " + " || ".join(errors)[-1200:])
 
 # ---- history + duplicate check ----
 def get_topic_history(workspace_id=DEFAULT_WORKSPACE_ID):
