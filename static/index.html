@@ -53,6 +53,13 @@ label{display:block;font-size:12.5px;color:#cbd5e1;margin:12px 0 6px}
 #login{position:fixed;inset:0;background:var(--bg);display:none;place-items:center;z-index:20}
 #login .box{width:340px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px}
 @media(max-width:900px){aside{display:none}.stats{grid-template-columns:repeat(2,1fr)}.row{grid-template-columns:1fr}main{padding:20px}}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}.gal>div{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:6px}.gal img{width:100%;height:100px;object-fit:cover;border-radius:8px}
+.tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}.btn.on{border-color:var(--accent);background:#1b2547}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.cal .d{background:var(--panel2);border:1px solid var(--line);border-radius:8px;min-height:74px;padding:6px;font-size:11px}.cal .d b{color:#fff}
+.cal .e{margin-top:4px;padding:2px 6px;border-radius:6px;background:#3a2a0b;color:#fbbf24;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cal .e.published{background:#0e2f1c;color:#4ade80}
+.pimg{max-width:260px;border-radius:10px;margin-top:8px;border:1px solid var(--line);display:block}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}.plat{display:flex;gap:10px;align-items:center;margin-top:8px}.plat input{width:auto}.plat select{width:auto}.plat span{width:90px}
+body{background-size:cover;background-attachment:fixed;background-position:center}
 </style>
 </head>
 <body>
@@ -67,6 +74,7 @@ label{display:block;font-size:12.5px;color:#cbd5e1;margin:12px 0 6px}
   <button class="nav" data-p="create">✍️ Create Post</button>
   <button class="nav" data-p="chat">💬 AI Chat</button>
   <button class="nav" data-p="schedule">🗓️ Schedule</button>
+  <button class="nav" data-p="media">🖼️ Media Library</button>
   <div class="spacer"></div>
   <div class="lbl">BUSINESS</div>
   <select id="biz"></select>
@@ -118,14 +126,21 @@ label{display:block;font-size:12.5px;color:#cbd5e1;margin:12px 0 6px}
 <section class="page" id="p-create">
   <h1>Create Post</h1><p class="sub">Generate a draft, edit it, then approve</p>
   <div class="card"><label style="margin-top:0">What should the post be about? (leave empty for an AI-chosen topic)</label>
-    <textarea id="prompt" rows="3" placeholder="e.g. Instagram ke liye Digital Marketing course ka post bana do"></textarea><br><br>
+    <textarea id="prompt" rows="3" placeholder="e.g. Create an Instagram post about our Digital Marketing course"></textarea><br><br>
+    <label>Platforms and language</label>
+    <div class="plat"><input type="checkbox" id="pl_facebook" checked><span>Facebook</span><select id="lg_facebook"><option>English</option><option>Urdu</option><option>Roman Urdu</option></select></div>
+    <div class="plat"><input type="checkbox" id="pl_instagram" checked><span>Instagram</span><select id="lg_instagram"><option>English</option><option>Urdu</option><option>Roman Urdu</option></select></div>
+    <div class="plat"><input type="checkbox" id="pl_linkedin"><span>LinkedIn</span><select id="lg_linkedin"><option>English</option><option>Urdu</option><option>Roman Urdu</option></select></div>
+    <div class="opts"><div><label>Image source</label><select id="imgSrc" onchange="srcChg()"><option value="ai">AI generated</option><option value="unsplash">Unsplash</option><option value="upload">My uploaded picture</option><option value="none">No image</option></select></div>
+    <div><label>Logo on image</label><select id="logoPos"><option value="">No logo</option><option value="br">Bottom right</option><option value="bl">Bottom left</option><option value="tr">Top right</option><option value="tl">Top left</option></select></div></div>
+    <div id="pickWrap" style="display:none"><label>Choose picture (upload it in Media Library first)</label><select id="pickMedia"></select></div><br>
     <button class="btn" id="genBtn" onclick="generate()">Generate draft</button></div>
   <div id="createOut"></div>
 </section>
 
 <!-- CHAT -->
 <section class="page" id="p-chat">
-  <h1>AI Chat</h1><p class="sub">Ask in plain language, e.g. “Facebook ke liye ek post bana do”</p>
+  <h1>AI Chat</h1><p class="sub">Ask in plain language, e.g. “Create a Facebook post about our new course”</p>
   <div class="card"><div class="chat" id="chat"><div class="msg a">Hi! Tell me what post you need.</div></div><br>
     <div style="display:flex;gap:10px"><input id="chatIn" placeholder="Type a message…" onkeydown="if(event.key==='Enter')sendChat()"><button class="btn" onclick="sendChat()">Send</button></div></div>
 </section>
@@ -133,7 +148,14 @@ label{display:block;font-size:12.5px;color:#cbd5e1;margin:12px 0 6px}
 <!-- SCHEDULE -->
 <section class="page" id="p-schedule">
   <h1>Schedule</h1><p class="sub">Approved, scheduled and published posts (times shown in your local time)</p>
-  <div class="card" id="schedList">Loading…</div>
+  <div class="tabs" id="schTabs"></div><div class="card" id="schedList">Loading…</div>
+</section>
+<!-- MEDIA -->
+<section class="page" id="p-media">
+  <h1>Media Library</h1><p class="sub">Upload your logo, background and photos. The newest logo and background are used for your dashboard and posts.</p>
+  <div class="card"><div class="row"><div><label>Type</label><select id="mKind"><option value="logo">Logo</option><option value="background">Background</option><option value="photo">Photo</option></select></div>
+  <div><label>File</label><input type="file" id="mFile" accept="image/*"></div></div><br><button class="btn" onclick="upload()">Upload</button></div>
+  <div class="card"><h3>Gallery</h3><div class="gal" id="gal"></div></div>
 </section>
 </main>
 <div class="toast" id="toast"></div>
@@ -156,7 +178,7 @@ async function doLogin(){ AUTH=$('pw').value; try{await api('/login'); localStor
 document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.nav').forEach(x=>x.classList.toggle('active',x===b));
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('show',p.id==='p-'+b.dataset.p));
-  if(b.dataset.p==='schedule') loadSchedule(); if(b.dataset.p==='profile') loadProfile(); if(b.dataset.p==='home') refreshAll();
+  if(b.dataset.p==='schedule') loadSchedule(); if(b.dataset.p==='profile') loadProfile(); if(b.dataset.p==='home') refreshAll(); if(b.dataset.p==='media') loadMedia();
 });
 
 /* business */
@@ -187,7 +209,7 @@ async function saveBiz(){
 /* home */
 async function refreshAll(){
   if(!BIZ) return; try{
-    const s=await api('/stats/'+BIZ); const L={draft:'#64748b',approved:'#3b82f6',scheduled:'#f59e0b',published:'#22c55e',failed:'#ef4444'};
+    loadMedia(); const s=await api('/stats/'+BIZ); const L={draft:'#64748b',approved:'#3b82f6',scheduled:'#f59e0b',published:'#22c55e',failed:'#ef4444'};
     $('stats').innerHTML=Object.keys(L).map(k=>`<div class="stat" style="--c:${L[k]}"><div class="n">${s[k]}</div><div class="l">${k}</div></div>`).join('');
     $('plats').textContent=s.platforms.length?s.platforms.join(', '):'none yet';
     $('bizTitle').textContent=$('biz').selectedOptions[0]?.text.replace(/ \(.*\)/,'')||'Dashboard';
@@ -198,14 +220,16 @@ async function refreshAll(){
 
 /* post card */
 function postHTML(p){
-  const c=Object.entries(p.content).map(([k,v])=>`<div class="muted" style="margin-top:8px"><b>${k}</b></div><pre id="c-${p.id}-${k}" contenteditable="${p.status==='draft'}">${esc(v)}</pre>`).join('');
+  const c=Object.entries(p.content).map(([k,v])=>`<div class="muted" style="margin-top:8px"><b>${k}</b></div><pre id="c-${p.id}-${k}" contenteditable="${p.status!=='published'}">${esc(v)}</pre>`).join('');
   const res=Object.keys(p.result||{}).length?`<div class="muted" style="margin-top:8px">${Object.entries(p.result).map(([k,v])=>k+': '+esc(String(v))).join(' · ')}</div>`:'';
+  const img=p.image_url?`<img class="pimg" src="${p.image_url}">`:'';
   let acts='';
   if(p.status==='draft') acts=`<button class="btn sm" onclick="act('${p.id}','approve')">✓ Approve</button>`;
   if(p.status==='approved'||p.status==='scheduled'||p.status==='failed') acts=`<input type="datetime-local" id="w-${p.id}" style="width:auto"><button class="btn sec sm" onclick="sched('${p.id}')">Schedule</button><button class="btn sm" onclick="act('${p.id}','publish')">Publish now</button>`;
   if(p.status==='published') acts='';
+  if(p.status!=='published') acts+=`<button class="btn sec sm" onclick="saveEdit('${p.id}')">Save edit</button><button class="btn sec sm" onclick="regen('${p.id}')">↻ Regenerate</button>`;
   const when=p.scheduled_at?` · ${new Date(p.scheduled_at+'Z').toLocaleString()}`:'';
-  return `<div class="post"><div class="top"><b>${esc(p.topic)}</b><span class="badge ${p.status}">${p.status}${when}</span></div>${p.image_path?`<img src="/${p.image_path}" style="width:160px;border-radius:10px;margin-top:8px;border:1px solid var(--line)">`:''}${c}${res}
+  return `<div class="post"><div class="top"><b>${esc(p.topic)}</b><span class="badge ${p.status}">${p.status}${when}</span></div>${p.image_path?`<img src="/${p.image_path}" style="width:160px;border-radius:10px;margin-top:8px;border:1px solid var(--line)">`:''}${img}${c}${res}
   <div class="acts">${acts}<button class="btn bad sm" onclick="del('${p.id}')">Delete</button></div></div>`;
 }
 async function act(id,a){
@@ -227,11 +251,39 @@ async function del(id){ if(!confirm('Delete this post?'))return; await api('/pos
 function reloadViews(){ refreshAll(); loadSchedule(); if(window._lastDraft) $('createOut').innerHTML=''; }
 
 /* create */
+function opts(){const P=['facebook','instagram','linkedin'].filter(k=>$('pl_'+k).checked),L={};P.forEach(k=>L[k]=$('lg_'+k).value);const up=$('imgSrc').value==='upload';return{platforms:P,languages:L,image_source:$('imgSrc').value,media_id:up?$('pickMedia').value:'',logo_pos:$('logoPos').value}}
 async function generate(){
-  if(!BIZ) return toast('Create a business first'); const b=$('genBtn'); b.disabled=true; b.textContent='Generating…';
-  try{ const p=await api('/generate','POST',{business_id:BIZ,prompt:$('prompt').value}); $('createOut').innerHTML='<div class="card">'+postHTML(p)+'</div>'; window._lastDraft=p.id; refreshAll(); }
+  if(!BIZ) return toast('Create a business first'); const o=opts(); if(!o.platforms.length) return toast('Pick at least one platform');
+  const b=$('genBtn'); b.disabled=true; b.textContent='Generating…';
+  try{ const p=await api('/generate','POST',{business_id:BIZ,prompt:$('prompt').value,...o}); $('createOut').innerHTML='<div class="card">'+postHTML(p)+'</div>'; window._lastDraft=p.id; refreshAll(); }
   catch(e){toast('Error: '+e.message)} b.disabled=false; b.textContent='Generate draft';
 }
+async function regen(id){
+  try{ toast('Regenerating…'); const p=await api(`/posts/${id}/regenerate`,'POST',{business_id:BIZ,prompt:$('prompt').value,...opts()});
+    if(window._lastDraft===id) $('createOut').innerHTML='<div class="card">'+postHTML(p)+'</div>'; refreshAll(); loadSchedule(); toast('New draft ready'); }
+  catch(e){toast('Error: '+e.message)}
+}
+async function saveEdit(id){
+  try{ const p=(await api(`/posts?business_id=${BIZ}`)).find(x=>x.id===id); const content={};
+    Object.keys(p.content).forEach(k=>{const el=$(`c-${id}-${k}`); content[k]=el?el.innerText:p.content[k]});
+    await api('/posts/'+id,'PUT',{content}); toast('Saved'); }catch(e){toast('Error: '+e.message)}
+}
+/* media */
+const readB64=f=>new Promise(r=>{const x=new FileReader();x.onload=()=>r(x.result);x.readAsDataURL(f)});
+async function upload(){
+  const f=$('mFile').files[0]; if(!f||!BIZ) return toast('Choose a file first'); if(f.size>8e6) return toast('File is over 8 MB');
+  try{ await api('/media','POST',{business_id:BIZ,kind:$('mKind').value,name:f.name,data:await readB64(f)}); $('mFile').value=''; toast('Uploaded'); loadMedia(); }catch(e){toast('Error: '+e.message)}
+}
+async function loadMedia(){
+  if(!BIZ) return; const M=await api('/media?business_id='+BIZ);
+  $('gal').innerHTML=M.length?M.map(m=>`<div><img src="${m.url}"><span class="muted">${m.kind}</span><button class="btn bad sm" onclick="delMedia('${m.id}')">Delete</button></div>`).join(''):'<span class="muted">Nothing here yet. Choose a type and a file above, then click Upload.</span>';
+  $('pickMedia').innerHTML=M.map(m=>`<option value="${m.id}">${m.kind}: ${esc(m.name)}</option>`).join('');
+  const lg=M.find(m=>m.kind==='logo'), bg=M.find(m=>m.kind==='background');
+  document.querySelector('aside .logo').innerHTML=lg?`<img src="${lg.url}" style="width:100%;height:100%;object-fit:cover;border-radius:11px">`:'📣';
+  document.body.style.backgroundImage=bg?`linear-gradient(rgba(11,16,32,.88),rgba(11,16,32,.88)),url(${bg.url})`:'';
+}
+async function delMedia(id){ if(!confirm('Delete this file?')) return; await api('/media/'+id,'DELETE'); loadMedia(); }
+function srcChg(){ $('pickWrap').style.display=$('imgSrc').value==='upload'?'block':'none'; }
 
 /* chat */
 async function sendChat(){
@@ -244,10 +296,22 @@ async function sendChat(){
 }
 
 /* schedule */
+let TAB='scheduled', CM=new Date(); CM.setDate(1);
+const HELP={scheduled:'No scheduled posts. Go to Create Post, generate a draft, click Approve, then pick a date and time and click Schedule.',approved:'No approved posts waiting. Approve a draft first, then schedule it or publish now.',published:'Nothing published yet.',failed:'No failed posts.'};
 async function loadSchedule(){
   if(!BIZ) return; const all=await api('/posts?business_id='+BIZ);
-  const rows=all.filter(p=>p.status!=='draft');
-  $('schedList').innerHTML=rows.length?rows.map(postHTML).join(''):'<span class="muted">No scheduled posts yet.</span>';
+  const T=[['scheduled','Scheduled'],['approved','Approved'],['published','Published'],['failed','Failed'],['calendar','Calendar']];
+  $('schTabs').innerHTML=T.map(([k,l])=>`<button class="btn sec sm ${TAB===k?'on':''}" onclick="TAB='${k}';loadSchedule()">${l}${k==='calendar'?'':' ('+all.filter(p=>p.status===k).length+')'}</button>`).join('');
+  if(TAB==='calendar') return calendar(all);
+  const rows=all.filter(p=>p.status===TAB); $('schedList').innerHTML=rows.length?rows.map(postHTML).join(''):`<span class="muted">${HELP[TAB]}</span>`;
+}
+function calendar(all){
+  const y=CM.getFullYear(), m=CM.getMonth(), first=new Date(y,m,1).getDay(), n=new Date(y,m+1,0).getDate(), by={};
+  all.filter(p=>p.scheduled_at).forEach(p=>{const d=new Date(p.scheduled_at+'Z'),k=d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate();(by[k]=by[k]||[]).push(p)});
+  let h=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><button class="btn sec sm" onclick="CM.setMonth(CM.getMonth()-1);loadSchedule()">‹</button><b>${CM.toLocaleString('en',{month:'long',year:'numeric'})}</b><button class="btn sec sm" onclick="CM.setMonth(CM.getMonth()+1);loadSchedule()">›</button></div><div class="cal">`
+    +['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="muted">${d}</div>`).join('')+'<div></div>'.repeat(first);
+  for(let d=1;d<=n;d++){const ev=by[y+'-'+m+'-'+d]||[]; h+=`<div class="d"><b>${d}</b>${ev.map(p=>`<div class="e ${p.status}">${new Date(p.scheduled_at+'Z').toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})} ${esc(p.topic)}</div>`).join('')}</div>`}
+  $('schedList').innerHTML=h+'</div>'+(all.some(p=>p.scheduled_at)?'':'<p class="muted" style="margin-top:10px">No scheduled posts yet. Approve a draft, pick a date and click Schedule.</p>');
 }
 
 async function init(){ try{ await loadBiz(); }catch(e){} }
