@@ -71,7 +71,7 @@ def gemini_text(prompt):
         except Exception as e:
             last = e
             msg = str(e)
-            if any(k in msg for k in ("503", "UNAVAILABLE", "429", "RESOURCE_EXHAUSTED")):
+            if any(k in msg for k in ("503", "UNAVAILABLE", "429", "RESOURCE_EXHAUSTED", "Connection aborted", "RemoteDisconnected")):
                 time.sleep(3 * (attempt + 1))
                 continue
             raise
