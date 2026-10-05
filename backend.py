@@ -305,7 +305,11 @@ def publish_draft(workspace, draft, platforms_to_publish):
 
     if "instagram" in platforms_to_publish:
         try:
-            image_url = upload_image_to_drive(draft["image_path"], "post_" + datetime.now().strftime("%Y%m%d%H%M%S") + ".png")
+            base = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
+            if base:   # serve the image from this dashboard's own public /media folder
+                image_url = base + "/" + draft["image_path"].lstrip("/")
+            else:      # fallback: Google Drive upload (works in Colab)
+                image_url = upload_image_to_drive(draft["image_path"], "post_" + datetime.now().strftime("%Y%m%d%H%M%S") + ".png")
             ig = post_to_instagram(draft["content"]["instagram"], image_url, ig_id, token)
             status["instagram"] = "posted (id: " + str(ig.get("id")) + ")"
         except Exception as e:
