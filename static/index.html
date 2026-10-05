@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Marketing Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b1020;--panel:#111827;--panel2:#0f172a;--line:#1f2937;--text:#e5e7eb;--muted:#94a3b8;--accent:#6366f1;--accent2:#06b6d4;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444}
+*{box-sizing:border-box;margin:0}
+body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+/* sidebar */
+aside{width:250px;flex:0 0 250px;background:linear-gradient(180deg,#0d1326,#0a0f1e);border-right:1px solid var(--line);padding:20px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px;overflow-y:auto}
+.brand{display:flex;gap:12px;align-items:center;padding:6px 8px 18px;border-bottom:1px solid var(--line);margin-bottom:12px}
+.logo{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-size:20px;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 6px 18px rgba(99,102,241,.35)}
+.brand b{display:block;font-size:15px;color:#fff}.brand small{color:var(--muted);font-size:11px}
+.lbl{font-size:10.5px;letter-spacing:.12em;color:#64748b;font-weight:600;padding:10px 10px 4px}
+.nav{all:unset;box-sizing:border-box;display:flex;gap:10px;align-items:center;padding:11px 14px;border-radius:10px;color:#a8b3c7;font-size:14px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:.15s}
+.nav:hover{background:#151d33;color:#fff}
+.nav.active{background:linear-gradient(90deg,rgba(99,102,241,.22),rgba(6,182,212,.08));border-color:rgba(99,102,241,.45);color:#fff;box-shadow:inset 3px 0 0 var(--accent)}
+select,input,textarea{width:100%;background:var(--panel2);border:1px solid #263349;color:var(--text);border-radius:10px;padding:10px 12px;font:inherit;font-size:14px;outline:none}
+select:focus,input:focus,textarea:focus{border-color:var(--accent)}
+.spacer{flex:1}
+/* main */
+main{flex:1;padding:30px 36px;max-width:1200px}
+h1{font-size:24px;color:#fff}.sub{color:var(--muted);font-size:13.5px;margin:4px 0 22px}
+.page{display:none}.page.show{display:block}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:18px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;position:relative;overflow:hidden}
+.stat:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c)}
+.stat .n{font-size:30px;font-weight:700;color:#fff}.stat .l{margin-top:8px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px}
+.card h3{font-size:15px;color:#fff;margin-bottom:10px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+label{display:block;font-size:12.5px;color:#cbd5e1;margin:12px 0 6px}
+.btn{border:0;border-radius:10px;padding:10px 16px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2))}
+.btn.sec{background:#162033;border:1px solid #263349;color:var(--text)}.btn.sec:hover{border-color:var(--accent)}
+.btn.bad{background:#2a1418;border:1px solid #5b2229;color:#fca5a5}
+.btn:disabled{opacity:.5;cursor:wait}.btn.sm{padding:6px 12px;font-size:12.5px}
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11.5px;font-weight:600;background:#1e293b;color:#cbd5e1}
+.badge.approved{background:#12284d;color:#7db0ff}.badge.scheduled{background:#3a2a0b;color:#fbbf24}.badge.published{background:#0e2f1c;color:#4ade80}.badge.failed{background:#3a1317;color:#f87171}
+.post{border-top:1px solid var(--line);padding:14px 0}.post:first-child{border-top:0}
+.post .top{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px}
+.post pre{white-space:pre-wrap;font:inherit;font-size:13.5px;color:#cbd5e1;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:6px}
+.post .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.post .acts input{width:auto}
+.muted{color:var(--muted);font-size:13.5px}
+.chat{height:420px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:4px}
+.msg{max-width:78%;padding:10px 14px;border-radius:12px;font-size:14px;white-space:pre-wrap}
+.msg.u{align-self:flex-end;background:linear-gradient(135deg,var(--accent),#4f46e5)}.msg.a{align-self:flex-start;background:var(--panel2);border:1px solid var(--line)}
+.toast{position:fixed;right:20px;bottom:20px;background:#1e293b;border:1px solid #334155;padding:12px 16px;border-radius:10px;font-size:14px;display:none;z-index:9}
+#login{position:fixed;inset:0;background:var(--bg);display:none;place-items:center;z-index:20}
+#login .box{width:340px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px}
+@media(max-width:900px){aside{display:none}.stats{grid-template-columns:repeat(2,1fr)}.row{grid-template-columns:1fr}main{padding:20px}}
+</style>
+</head>
+<body>
+<div id="login"><div class="box"><div class="brand" style="border:0"><div class="logo">📣</div><div><b>AI Marketing Agent</b><small>Sign in</small></div></div>
+<label>Password</label><input id="pw" type="password" onkeydown="if(event.key==='Enter')doLogin()"><br><br><button class="btn" style="width:100%" onclick="doLogin()">Enter</button></div></div>
+
+<aside>
+  <div class="brand"><div class="logo">📣</div><div><b>AI Marketing Agent</b><small>Approve before publish</small></div></div>
+  <div class="lbl">MENU</div>
+  <button class="nav active" data-p="home">🏠 Home</button>
+  <button class="nav" data-p="profile">🏢 Business Profile</button>
+  <button class="nav" data-p="create">✍️ Create Post</button>
+  <button class="nav" data-p="chat">💬 AI Chat</button>
+  <button class="nav" data-p="schedule">🗓️ Schedule</button>
+  <div class="spacer"></div>
+  <div class="lbl">BUSINESS</div>
+  <select id="biz"></select>
+  <button class="btn sec sm" style="margin-top:8px" onclick="loadBiz()">↻ Refresh list</button>
+  <button class="btn sec sm" onclick="newBiz()">＋ New business</button>
+</aside>
+
+<main>
+<!-- HOME -->
+<section class="page show" id="p-home">
+  <h1 id="bizTitle">Dashboard</h1><p class="sub">Overview of your posts and connected platforms</p>
+  <div class="stats" id="stats"></div>
+  <div class="card"><b>Connected platforms:</b> <span id="plats" class="muted">none yet</span></div>
+  <div class="card"><h3>Drafts waiting for approval</h3><div id="homeDrafts" class="muted">Nothing yet.</div></div>
+  <button class="btn sec" onclick="refreshAll()">↻ Refresh</button>
+</section>
+
+<!-- PROFILE -->
+<section class="page" id="p-profile">
+  <h1>Business Profile</h1><p class="sub">The agent writes posts from this information</p>
+  <div class="card">
+    <div class="row">
+      <div><label>Business name</label><input id="f_name"></div>
+      <div><label>Brand name (on image)</label><input id="f_brand"></div>
+      <div><label>Industry</label><input id="f_industry"></div>
+      <div><label>Website</label><input id="f_website"></div>
+    </div>
+    <label>Target audience</label><input id="f_audience">
+    <label>Description</label><textarea id="f_description" rows="3"></textarea>
+    <div class="row">
+      <div><label>Post language</label><input id="f_language" placeholder="e.g. English / Urdu / Roman Urdu"></div>
+      <div><label>Brand tone</label><input id="f_tone" placeholder="e.g. professional and friendly"></div>
+    </div>
+    <label>Extra brand instructions (optional)</label><input id="f_instructions">
+    <label>Default CTA</label><input id="f_cta" placeholder="e.g. Enroll now: https://...">
+    <label>Products / services (one per line: name | category | cta)</label><textarea id="f_products" rows="4"></textarea>
+  </div>
+  <div class="card"><h3>Platform connections</h3>
+    <div class="row">
+      <div><label>Facebook Page ID</label><input id="f_fb"></div>
+      <div><label>Instagram Business Account ID</label><input id="f_ig"></div>
+    </div>
+    <label>Facebook Page Access Token (stored on server, never shown again)</label><input id="f_token" type="password">
+  </div>
+  <button class="btn" onclick="saveBiz()">Save profile</button>
+</section>
+
+<!-- CREATE -->
+<section class="page" id="p-create">
+  <h1>Create Post</h1><p class="sub">Generate a draft, edit it, then approve</p>
+  <div class="card"><label style="margin-top:0">What should the post be about? (leave empty for an AI-chosen topic)</label>
+    <textarea id="prompt" rows="3" placeholder="e.g. Instagram ke liye Digital Marketing course ka post bana do"></textarea><br><br>
+    <button class="btn" id="genBtn" onclick="generate()">Generate draft</button></div>
+  <div id="createOut"></div>
+</section>
+
+<!-- CHAT -->
+<section class="page" id="p-chat">
+  <h1>AI Chat</h1><p class="sub">Ask in plain language, e.g. “Facebook ke liye ek post bana do”</p>
+  <div class="card"><div class="chat" id="chat"><div class="msg a">Hi! Tell me what post you need.</div></div><br>
+    <div style="display:flex;gap:10px"><input id="chatIn" placeholder="Type a message…" onkeydown="if(event.key==='Enter')sendChat()"><button class="btn" onclick="sendChat()">Send</button></div></div>
+</section>
+
+<!-- SCHEDULE -->
+<section class="page" id="p-schedule">
+  <h1>Schedule</h1><p class="sub">Approved, scheduled and published posts (times shown in your local time)</p>
+  <div class="card" id="schedList">Loading…</div>
+</section>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+let AUTH = localStorage.getItem('auth') || '', BIZ = '';
+const $ = id => document.getElementById(id);
+const esc = s => (s||'').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',3200)}
+
+async function api(path, method='GET', body){
+  const r = await fetch('/api'+path,{method,headers:{'Content-Type':'application/json','X-Auth':AUTH},body:body?JSON.stringify(body):undefined});
+  if(r.status===401){ $('login').style.display='grid'; throw new Error('auth'); }
+  if(!r.ok){ let m=r.statusText; try{m=(await r.json()).detail||m}catch(e){} throw new Error(m); }
+  return r.json();
+}
+async function doLogin(){ AUTH=$('pw').value; try{await api('/login'); localStorage.setItem('auth',AUTH); $('login').style.display='none'; init();}catch(e){toast('Wrong password')} }
+
+/* navigation */
+document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.nav').forEach(x=>x.classList.toggle('active',x===b));
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('show',p.id==='p-'+b.dataset.p));
+  if(b.dataset.p==='schedule') loadSchedule(); if(b.dataset.p==='profile') loadProfile(); if(b.dataset.p==='home') refreshAll();
+});
+
+/* business */
+async function loadBiz(){
+  const list = await api('/businesses'); const s=$('biz'); s.innerHTML='';
+  list.forEach(b=>s.add(new Option(`${b.name} (${b.id})`, b.id)));
+  if(!list.length){ BIZ=''; $('bizTitle').textContent='Create your first business'; document.querySelector('[data-p=profile]').click(); return; }
+  if(list.find(b=>b.id===BIZ)) s.value=BIZ; BIZ=s.value; refreshAll();
+}
+$('biz').onchange=()=>{BIZ=$('biz').value; refreshAll(); loadProfile();};
+function newBiz(){ BIZ=''; ['name','brand','industry','website','audience','description','cta','language','tone','instructions','products','fb','ig','token'].forEach(k=>$('f_'+k).value=''); document.querySelector('[data-p=profile]').click(); }
+
+async function loadProfile(){
+  if(!BIZ) return; const b = await api('/businesses/'+BIZ);
+  $('f_name').value=b.name; $('f_brand').value=b.brand_name; $('f_industry').value=b.industry; $('f_website').value=b.website;
+  $('f_audience').value=b.audience; $('f_description').value=b.description; $('f_cta').value=b.cta; $('f_language').value=b.language||''; $('f_tone').value=b.tone||''; $('f_instructions').value=b.instructions||'';
+  $('f_fb').value=b.fb_page_id; $('f_ig').value=b.ig_id; $('f_token').value=b.fb_token;
+  $('f_products').value=(b.products||[]).map(p=>`${p.name} | ${p.category||''} | ${p.cta||''}`).join('\n');
+}
+async function saveBiz(){
+  const products=$('f_products').value.split('\n').filter(x=>x.trim()).map((l,i)=>{const [name,category,cta]=l.split('|').map(s=>(s||'').trim());return{product_id:'P'+(i+1),name,category:category||'General',cta:cta||'',description:''}});
+  try{
+    const r=await api('/businesses','POST',{id:BIZ||null,name:$('f_name').value,brand_name:$('f_brand').value,industry:$('f_industry').value,website:$('f_website').value,audience:$('f_audience').value,description:$('f_description').value,cta:$('f_cta').value,language:$('f_language').value,tone:$('f_tone').value,instructions:$('f_instructions').value,fb_page_id:$('f_fb').value,ig_id:$('f_ig').value,fb_token:$('f_token').value,products});
+    BIZ=r.id; toast('Profile saved'); await loadBiz();
+  }catch(e){toast('Error: '+e.message)}
+}
+
+/* home */
+async function refreshAll(){
+  if(!BIZ) return; try{
+    const s=await api('/stats/'+BIZ); const L={draft:'#64748b',approved:'#3b82f6',scheduled:'#f59e0b',published:'#22c55e',failed:'#ef4444'};
+    $('stats').innerHTML=Object.keys(L).map(k=>`<div class="stat" style="--c:${L[k]}"><div class="n">${s[k]}</div><div class="l">${k}</div></div>`).join('');
+    $('plats').textContent=s.platforms.length?s.platforms.join(', '):'none yet';
+    $('bizTitle').textContent=$('biz').selectedOptions[0]?.text.replace(/ \(.*\)/,'')||'Dashboard';
+    const d=await api(`/posts?business_id=${BIZ}&status=draft`);
+    $('homeDrafts').innerHTML=d.length?d.map(postHTML).join(''):'Nothing yet.';
+  }catch(e){}
+}
+
+/* post card */
+function postHTML(p){
+  const c=Object.entries(p.content).map(([k,v])=>`<div class="muted" style="margin-top:8px"><b>${k}</b></div><pre id="c-${p.id}-${k}" contenteditable="${p.status==='draft'}">${esc(v)}</pre>`).join('');
+  const res=Object.keys(p.result||{}).length?`<div class="muted" style="margin-top:8px">${Object.entries(p.result).map(([k,v])=>k+': '+esc(String(v))).join(' · ')}</div>`:'';
+  let acts='';
+  if(p.status==='draft') acts=`<button class="btn sm" onclick="act('${p.id}','approve')">✓ Approve</button>`;
+  if(p.status==='approved'||p.status==='scheduled'||p.status==='failed') acts=`<input type="datetime-local" id="w-${p.id}" style="width:auto"><button class="btn sec sm" onclick="sched('${p.id}')">Schedule</button><button class="btn sm" onclick="act('${p.id}','publish')">Publish now</button>`;
+  if(p.status==='published') acts='';
+  const when=p.scheduled_at?` · ${new Date(p.scheduled_at+'Z').toLocaleString()}`:'';
+  return `<div class="post"><div class="top"><b>${esc(p.topic)}</b><span class="badge ${p.status}">${p.status}${when}</span></div>${p.image_path?`<img src="/${p.image_path}" style="width:160px;border-radius:10px;margin-top:8px;border:1px solid var(--line)">`:''}${c}${res}
+  <div class="acts">${acts}<button class="btn bad sm" onclick="del('${p.id}')">Delete</button></div></div>`;
+}
+async function act(id,a){
+  try{
+    if(a==='approve'){ // save edits first
+      const p=(await api(`/posts?business_id=${BIZ}`)).find(x=>x.id===id); const content={};
+      Object.keys(p.content).forEach(k=>{const el=$(`c-${id}-${k}`); content[k]=el?el.innerText:p.content[k]});
+      await api('/posts/'+id,'PUT',{content});
+    }
+    await api(`/posts/${id}/${a}`,'POST'); toast(a==='approve'?'Approved':'Done'); reloadViews();
+  }catch(e){toast('Error: '+e.message)}
+}
+async function sched(id){
+  const v=$('w-'+id).value; if(!v) return toast('Pick date & time');
+  const utc=new Date(v).toISOString().slice(0,16);
+  try{await api(`/posts/${id}/schedule`,'POST',{when:utc}); toast('Scheduled'); reloadViews();}catch(e){toast('Error: '+e.message)}
+}
+async function del(id){ if(!confirm('Delete this post?'))return; await api('/posts/'+id,'DELETE'); reloadViews(); }
+function reloadViews(){ refreshAll(); loadSchedule(); if(window._lastDraft) $('createOut').innerHTML=''; }
+
+/* create */
+async function generate(){
+  if(!BIZ) return toast('Create a business first'); const b=$('genBtn'); b.disabled=true; b.textContent='Generating…';
+  try{ const p=await api('/generate','POST',{business_id:BIZ,prompt:$('prompt').value}); $('createOut').innerHTML='<div class="card">'+postHTML(p)+'</div>'; window._lastDraft=p.id; refreshAll(); }
+  catch(e){toast('Error: '+e.message)} b.disabled=false; b.textContent='Generate draft';
+}
+
+/* chat */
+async function sendChat(){
+  const t=$('chatIn').value.trim(); if(!t||!BIZ) return; $('chatIn').value='';
+  const box=$('chat'); box.insertAdjacentHTML('beforeend',`<div class="msg u">${esc(t)}</div>`);
+  box.insertAdjacentHTML('beforeend','<div class="msg a" id="typing">Thinking…</div>'); box.scrollTop=1e9;
+  try{ const r=await api('/chat','POST',{business_id:BIZ,prompt:t}); $('typing').remove();
+    box.insertAdjacentHTML('beforeend',`<div class="msg a">${esc(r.reply)}</div>`); refreshAll(); }
+  catch(e){ $('typing').textContent='Error: '+e.message } box.scrollTop=1e9;
+}
+
+/* schedule */
+async function loadSchedule(){
+  if(!BIZ) return; const all=await api('/posts?business_id='+BIZ);
+  const rows=all.filter(p=>p.status!=='draft');
+  $('schedList').innerHTML=rows.length?rows.map(postHTML).join(''):'<span class="muted">No scheduled posts yet.</span>';
+}
+
+async function init(){ try{ await loadBiz(); }catch(e){} }
+init();
+</script>
+</body>
+</html>
