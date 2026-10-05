@@ -169,7 +169,7 @@ function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';set
 async function api(path, method='GET', body){
   const r = await fetch('/api'+path,{method,headers:{'Content-Type':'application/json','X-Auth':AUTH},body:body?JSON.stringify(body):undefined});
   if(r.status===401){ $('login').style.display='grid'; throw new Error('auth'); }
-  if(!r.ok){ let m=r.statusText; try{m=(await r.json()).detail||m}catch(e){} throw new Error(m); }
+  if(!r.ok){ let m=r.statusText||('HTTP '+r.status); try{m=(await r.json()).detail||m}catch(e){} throw new Error(m); }
   return r.json();
 }
 async function doLogin(){ AUTH=$('pw').value; try{await api('/login'); localStorage.setItem('auth',AUTH); $('login').style.display='none'; init();}catch(e){toast('Wrong password')} }
@@ -256,7 +256,7 @@ async function generate(){
   if(!BIZ) return toast('Create a business first'); const o=opts(); if(!o.platforms.length) return toast('Pick at least one platform');
   const b=$('genBtn'); b.disabled=true; b.textContent='Generating…';
   try{ const p=await api('/generate','POST',{business_id:BIZ,prompt:$('prompt').value,...o}); $('createOut').innerHTML='<div class="card">'+postHTML(p)+'</div>'; window._lastDraft=p.id; refreshAll(); }
-  catch(e){toast('Error: '+e.message)} b.disabled=false; b.textContent='Generate draft';
+  catch(e){ $('createOut').innerHTML='<div class="card" id="ERRBOX"><b>Draft failed</b><pre>'+esc(e.message)+'</pre></div>'; toast('Draft failed - see the message below') } b.disabled=false; b.textContent='Generate draft';
 }
 async function regen(id){
   try{ toast('Regenerating…'); const p=await api(`/posts/${id}/regenerate`,'POST',{business_id:BIZ,prompt:$('prompt').value,...opts()});
